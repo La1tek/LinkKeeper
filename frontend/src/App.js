@@ -124,6 +124,32 @@ function App() {
     }
   };
 
+  // --- НОВАЯ ФУНКЦИЯ: РЕДАКТИРОВАНИЕ ---
+  const editLink = async (link) => {
+    const newTitle = prompt('Edit title:', link.title);
+    const newUrl = prompt('Edit URL:', link.url);
+    if (!newTitle || !newUrl) return;
+
+    const res = await fetch(`${API_URL}/links/${link.id}`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Authorization': `Bearer ${token}` 
+      },
+      body: JSON.stringify({ title: newTitle, url: newUrl })
+    });
+    if (res.ok) {
+      const updatedLink = await res.json();
+      setLinks(links.map(l => l.id === link.id ? updatedLink : l));
+    }
+  };
+
+  // --- НОВАЯ ФУНКЦИЯ: КОПИРОВАНИЕ ---
+  const copyToClipboard = (url) => {
+    navigator.clipboard.writeText(url);
+    alert('Link copied to clipboard!');
+  };
+
   const deleteLink = async (id) => {
     const res = await fetch(`${API_URL}/links/${id}`, {
       method: 'DELETE',
@@ -173,7 +199,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navbar */}
       <nav className="bg-white shadow-md p-4">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-black text-blue-600 tracking-tight">LINKKEEPER</h1>
@@ -187,7 +212,6 @@ function App() {
       </nav>
 
       <div className="max-w-5xl mx-auto p-4 sm:p-6">
-        {/* Tabs Row */}
         <div className="flex flex-wrap gap-2 mb-8">
           {tabs.map(tab => (
             <div key={tab.id} className={`flex items-center rounded-lg shadow-sm overflow-hidden border ${activeTab === tab.id ? 'border-blue-600 ring-1 ring-blue-600' : 'border-gray-200'}`}>
@@ -213,7 +237,6 @@ function App() {
           </button>
         </div>
 
-        {/* Content Area */}
         {activeTab ? (
           <div>
             <div className="flex justify-between items-center mb-6">
@@ -228,7 +251,6 @@ function App() {
               </button>
             </div>
 
-            {/* Links Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {links.filter(l => l.tab_id === activeTab).map(link => (
                 <div key={link.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all flex justify-between items-center group">
@@ -241,13 +263,13 @@ function App() {
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     {/* Кнопка Открыть */}
                     <a 
                       href={link.url} 
                       target="_blank" 
                       rel="noreferrer"
-                      className="p-2.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                       title="Open Link"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -256,10 +278,32 @@ function App() {
                       </svg>
                     </a>
 
+                    {/* Кнопка Копировать */}
+                    <button 
+                      onClick={() => copyToClipboard(link.url)}
+                      className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Copy Link"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      </svg>
+                    </button>
+
+                    {/* Кнопка Изменить */}
+                    <button 
+                      onClick={() => editLink(link)}
+                      className="p-2 text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                      title="Edit Link"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.586 15H14v-1.586l4.707-4.707 1.586 1.586L15.586 15z" />
+                      </svg>
+                    </button>
+
                     {/* Кнопка Удалить */}
                     <button 
                       onClick={() => deleteLink(link.id)} 
-                      className="p-2.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                       title="Delete"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

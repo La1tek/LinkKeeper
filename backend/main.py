@@ -28,6 +28,11 @@ class LinkCreate(BaseModel):
     title: str
     url: str
 
+# Схема для обновления ссылки
+class LinkUpdate(BaseModel):
+    title: str
+    url: str
+
 async def get_current_user(token: str = Depends(oauth2_scheme), s: Session = Depends(get_db)):
     try:
         payload = auth.jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
@@ -86,6 +91,17 @@ def create_link(link: LinkCreate, user: db.User = Depends(get_current_user), s: 
     s.commit()
     s.refresh(new_link)
     return new_link
+
+# Эндпоинт для редактирования ссылки
+@app.put("/api/links/{link_id}")
+def update_link(link_id: int, link_data: LinkUpdate, user: db.User = Depends(get_current_user), s: Session = Depends(get_db)):
+    link = s.query(db.Link).join(db.Tab).filter(db.Link.id == link_id, db.Tab.user_id == user.id).first()
+    if not link: raise HTTPException(status_code=404)
+    link.title = link_data.title
+    link.url = link_data.url
+    s.commit()
+    s.refresh(link)
+    return link
 
 @app.delete("/api/links/{link_id}")
 def delete_link(link_id: int, user: db.User = Depends(get_current_user), s: Session = Depends(get_db)):
