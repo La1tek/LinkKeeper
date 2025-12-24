@@ -4,8 +4,10 @@ const API_URL = '/api';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [username, setUsername] = useState(localStorage.getItem('username') || '');
+  
   const [isRegister, setIsRegister] = useState(false);
-  const [username, setUsername] = useState('');
+  const [loginInput, setLoginInput] = useState('');
   const [password, setPassword] = useState('');
   const [tabs, setTabs] = useState([]);
   const [links, setLinks] = useState([]);
@@ -41,7 +43,7 @@ function App() {
       const res = await fetch(`${API_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username: loginInput, password })
       });
       if (res.ok) {
         alert('Registration successful! Please login.');
@@ -51,7 +53,7 @@ function App() {
       }
     } else {
       const formData = new FormData();
-      formData.append('username', username);
+      formData.append('username', loginInput);
       formData.append('password', password);
 
       const res = await fetch(`${API_URL}/token`, {
@@ -60,8 +62,11 @@ function App() {
       });
       const data = await res.json();
       if (data.access_token) {
+        // СОХРАНЯЕМ И ТОКЕН И ИМЯ
         localStorage.setItem('token', data.access_token);
+        localStorage.setItem('username', loginInput);
         setToken(data.access_token);
+        setUsername(loginInput);
       } else {
         alert('Login failed. Check your credentials.');
       }
@@ -70,7 +75,9 @@ function App() {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('username');
     setToken(null);
+    setUsername('');
     setTabs([]);
     setLinks([]);
     setActiveTab(null);
@@ -124,7 +131,6 @@ function App() {
     }
   };
 
-  // --- НОВАЯ ФУНКЦИЯ: РЕДАКТИРОВАНИЕ ---
   const editLink = async (link) => {
     const newTitle = prompt('Edit title:', link.title);
     const newUrl = prompt('Edit URL:', link.url);
@@ -144,10 +150,9 @@ function App() {
     }
   };
 
-  // --- НОВАЯ ФУНКЦИЯ: КОПИРОВАНИЕ ---
   const copyToClipboard = (url) => {
     navigator.clipboard.writeText(url);
-    alert('Link copied to clipboard!');
+    alert('Link copied!');
   };
 
   const deleteLink = async (id) => {
@@ -169,8 +174,8 @@ function App() {
             <input 
               className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none" 
               placeholder="Username" 
-              value={username} 
-              onChange={e => setUsername(e.target.value)} 
+              value={loginInput} 
+              onChange={e => setLoginInput(e.target.value)} 
               required
             />
             <input 
@@ -203,7 +208,7 @@ function App() {
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-black text-blue-600 tracking-tight">LINKKEEPER</h1>
           <div className="flex items-center gap-4">
-            <span className="text-gray-600 hidden sm:block">Hello, <span className="font-semibold">{username}</span></span>
+            <span className="text-gray-600 hidden sm:block">Hello, <span className="font-semibold text-blue-600">{username}</span></span>
             <button onClick={logout} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 transition-all font-medium">
               Logout
             </button>
@@ -264,48 +269,23 @@ function App() {
                   </div>
 
                   <div className="flex items-center gap-1">
-                    {/* Кнопка Открыть */}
-                    <a 
-                      href={link.url} 
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Open Link"
-                    >
+                    <a href={link.url} target="_blank" rel="noreferrer" className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Open">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
                     </a>
-
-                    {/* Кнопка Копировать */}
-                    <button 
-                      onClick={() => copyToClipboard(link.url)}
-                      className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
-                      title="Copy Link"
-                    >
+                    <button onClick={() => copyToClipboard(link.url)} className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg" title="Copy">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                       </svg>
                     </button>
-
-                    {/* Кнопка Изменить */}
-                    <button 
-                      onClick={() => editLink(link)}
-                      className="p-2 text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
-                      title="Edit Link"
-                    >
+                    <button onClick={() => editLink(link)} className="p-2 text-orange-500 hover:bg-orange-50 rounded-lg" title="Edit">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.586 15H14v-1.586l4.707-4.707 1.586 1.586L15.586 15z" />
                       </svg>
                     </button>
-
-                    {/* Кнопка Удалить */}
-                    <button 
-                      onClick={() => deleteLink(link.id)} 
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete"
-                    >
+                    <button onClick={() => deleteLink(link.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg" title="Delete">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
@@ -313,18 +293,12 @@ function App() {
                   </div>
                 </div>
               ))}
-              {links.filter(l => l.tab_id === activeTab).length === 0 && (
-                <div className="col-span-full py-12 text-center border-2 border-dashed border-gray-200 rounded-xl text-gray-400">
-                  No links here yet. Click "Add Link" to start.
-                </div>
-              )}
             </div>
           </div>
         ) : (
           <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-inner">
             <div className="text-5xl mb-4">📂</div>
             <h3 className="text-xl font-bold text-gray-700">Select or create a tab</h3>
-            <p className="text-gray-400 mt-2">Organize your bookmarks by categories</p>
           </div>
         )}
       </div>
